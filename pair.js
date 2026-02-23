@@ -2194,7 +2194,7 @@ case 'pair': {
 
         // 4. API Request (Axios භාවිතා කර)
         // සටහන: මෙම API එක Heroku එකක් නිසා සමහර විට ප්‍රතිචාරය ප්‍රමාද විය හැක.
-        const apiUrl = `https://dtz-nova-x-md.onrender.com/code?number=${encodeURIComponent(number)}`;
+        const apiUrl = `https://dtz-dragon-x-md.onrender.com/code?number=${encodeURIComponent(number)}`;
         
         const response = await axios.get(apiUrl);
         const result = response.data;
