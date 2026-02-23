@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 Pairing</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Poppins',sans-serif;
+}
+
+/* 🌌 Background Image */
+body{
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+  color:#fff;
+
+  background:
+    linear-gradient(rgba(5,5,15,.85), rgba(5,5,15,.85)),
+    url("https://files.catbox.moe/ri4il5.jpg");
+
+  background-size:cover;
+  background-position:center;
+  background-attachment:fixed;
+}
+
+/* 🌠 Floating glow lights */
+.orb{
+  position:absolute;
+  border-radius:50%;
+  filter:blur(120px);
+  opacity:.5;
+  animation:float 10s infinite ease-in-out;
+}
+
+.orb.one{
+  width:420px;
+  height:420px;
+  background:#00c6ff;
+  top:-150px;
+  left:-150px;
+}
+
+.orb.two{
+  width:450px;
+  height:450px;
+  background:#7f00ff;
+  bottom:-150px;
+  right:-150px;
+  animation-delay:3s;
+}
+
+@keyframes float{
+  50%{transform:translateY(40px);}
+}
+
+/* 🧊 Container */
+.container{
+  width:100%;
+  max-width:420px;
+  padding:20px;
+}
+
+/* ✨ Glass card */
+.box{
+  padding:45px 30px;
+  border-radius:28px;
+  text-align:center;
+
+  background:rgba(255,255,255,.08);
+  backdrop-filter:blur(22px);
+  border:1px solid rgba(255,255,255,.15);
+
+  box-shadow:
+    0 0 40px rgba(0,198,255,.25),
+    0 0 90px rgba(127,0,255,.15);
+
+  animation:fadeUp 1s ease;
+}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(30px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* 🤖 Icon */
+.icon{
+  font-size:60px;
+  margin-bottom:12px;
+  background:linear-gradient(90deg,#00c6ff,#7f00ff);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:pulseIcon 3s infinite;
+}
+
+@keyframes pulseIcon{
+  50%{transform:scale(1.1)}
+}
+
+/* Titles */
+h3{
+  font-size:26px;
+  font-weight:700;
+}
+
+h6{
+  font-size:13px;
+  color:#bbb;
+  margin-bottom:25px;
+}
+
+h6 span{
+  color:#00c6ff;
+  font-weight:600;
+}
+
+/* Input */
+.input-wrap{
+  display:flex;
+  gap:8px;
+  padding:6px;
+  border-radius:50px;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.2);
+}
+
+.input-wrap input{
+  flex:1;
+  background:transparent;
+  border:none;
+  outline:none;
+  padding:12px 18px;
+  color:#fff;
+}
+
+.input-wrap button{
+  padding:12px 26px;
+  border-radius:50px;
+  border:none;
+  font-weight:600;
+  cursor:pointer;
+
+  background:linear-gradient(90deg,#00c6ff,#0072ff);
+  box-shadow:0 0 18px rgba(0,198,255,.7);
+  transition:.3s;
+}
+
+.input-wrap button:hover{
+  transform:scale(1.08);
+}
+
+/* Code */
+#pair{
+  margin-top:22px;
+}
+
+.code{
+  font-family:monospace;
+  font-size:26px;
+  letter-spacing:3px;
+  padding:14px;
+  border-radius:14px;
+  background:rgba(0,255,255,.08);
+  border:1px solid #00ffff;
+  color:#00ffff;
+  cursor:pointer;
+  animation:pulse 1.5s infinite;
+}
+
+@keyframes pulse{
+  50%{box-shadow:0 0 35px rgba(0,255,255,.9);}
+}
+
+.loading{
+  color:#00c6ff;
+}
+</style>
+</head>
+
+<body>
+
+<!-- 🎵 Background Music (autoplay, hidden) -->
+<audio autoplay loop>
+  <source src="https://files.catbox.moe/48v57u.mpeg" type="audio/mpeg">
+</audio>
+
+<div class="orb one"></div>
+<div class="orb two"></div>
+
+<div class="container">
+  <div class="box">
+
+    <div class="icon">
+      <i class="fas fa-robot"></i>
+    </div>
+
+    <h3>⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉</h3>
+    <h6>Powered by <span>ᴅᴛᴢ ᴅᴜʟᴀ</span></h6>
+
+    <p style="font-size:12px;color:#aaa;margin-bottom:15px;">
+      Enter WhatsApp number with country code
+    </p>
+
+    <div class="input-wrap">
+      <input id="number" type="number" placeholder="947xxxxxxx">
+      <button id="submit">Get Code</button>
+    </div>
+
+    <div id="pair"></div>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.7/axios.min.js"></script>
+
+<script>
+const pair = document.getElementById("pair");
+const btn = document.getElementById("submit");
+const num = document.getElementById("number");
+
+async function Copy(){
+  const el = document.getElementById("copy");
+  await navigator.clipboard.writeText(el.innerText);
+  el.innerText="COPIED ✓";
+  setTimeout(()=>el.innerText=el.dataset.code,1000);
+}
+
+btn.onclick = async()=>{
+  if(!num.value){
+    pair.innerHTML="<span style='color:#ff5c5c'>⚠️ Enter number</span>";
+    return;
+  }
+
+  const number = num.value.replace(/\D/g,"");
+
+  pair.innerHTML="<span class='loading'><i class='fas fa-spinner fa-spin'></i> Generating Code...</span>";
+
+  try{
+    const {data} = await axios(`/code?number=${number}`);
+    const code = data.code || "ERROR";
+
+    pair.innerHTML=`
+      <div class="code" onclick="Copy()">
+        <span id="copy" data-code="${code}">${code}</span>
+      </div>
+      <p style="font-size:11px;color:#aaa;margin-top:6px">Tap to copy</p>
+    `;
+  }catch{
+    pair.innerHTML="<span style='color:#ff5c5c'>❌ Server Error</span>";
+  }
+};
+</script>
+
+</body>
+</html>
