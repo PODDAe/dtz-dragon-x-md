@@ -1,266 +1,652 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ • ᴡʜᴀᴛsᴀᴘᴘ ᴘᴀɪʀɪɴɢ</title>
+  <!-- Fonts & Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-<title>⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 Pairing</title>
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: #0b0d1e;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      color: #eef5ff;
+      position: relative;
+      overflow-x: hidden;
+    }
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    /* —————————————————  background galaxy ————————————————— */
+    .cosmic-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      background: radial-gradient(circle at 30% 40%, #1a1f3a, #030514);
+    }
 
-<style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Poppins',sans-serif;
-}
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(90, 200, 250, 0.4), transparent 80%);
+      filter: blur(45px);
+      animation: orbFloat 24s infinite alternate ease-in-out;
+    }
 
-/* 🌌 Background Image */
-body{
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  overflow:hidden;
-  color:#fff;
+    .orb1 { width: 50vmax; height: 50vmax; top: -10%; left: -10%; background: radial-gradient(circle, #4f46e5, #22d3ee); opacity: 0.2; }
+    .orb2 { width: 40vmin; height: 40vmin; bottom: 5%; right: 2%; background: radial-gradient(circle, #f43f5e, #fb7185); opacity: 0.15; animation-duration: 18s; }
+    .orb3 { width: 70vmin; height: 70vmin; top: 20%; right: 20%; background: radial-gradient(circle, #10b981, #34d399); opacity: 0.1; animation-duration: 30s; }
 
-  background:
-    linear-gradient(rgba(5,5,15,.85), rgba(5,5,15,.85)),
-    url("https://files.catbox.moe/ri4il5.jpg");
+    @keyframes orbFloat {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(3%, 5%) scale(1.1); }
+    }
 
-  background-size:cover;
-  background-position:center;
-  background-attachment:fixed;
-}
+    .grid-lines {
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      background-image: 
+        linear-gradient(rgba(120, 180, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(120, 180, 255, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      transform: rotate(15deg) translate(-20%, -20%);
+      pointer-events: none;
+    }
 
-/* 🌠 Floating glow lights */
-.orb{
-  position:absolute;
-  border-radius:50%;
-  filter:blur(120px);
-  opacity:.5;
-  animation:float 10s infinite ease-in-out;
-}
+    /* particles (tiny stars) */
+    .star-field {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
 
-.orb.one{
-  width:420px;
-  height:420px;
-  background:#00c6ff;
-  top:-150px;
-  left:-150px;
-}
+    .star {
+      position: absolute;
+      background: #fff;
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+      opacity: 0.5;
+      box-shadow: 0 0 8px 2px rgba(200, 220, 255, 0.6);
+      animation: twinkle 4s infinite alternate;
+    }
 
-.orb.two{
-  width:450px;
-  height:450px;
-  background:#7f00ff;
-  bottom:-150px;
-  right:-150px;
-  animation-delay:3s;
-}
+    @keyframes twinkle {
+      0% { opacity: 0.2; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1.2); }
+    }
 
-@keyframes float{
-  50%{transform:translateY(40px);}
-}
+    /* ————————————————— main card ————————————————— */
+    .card {
+      position: relative;
+      z-index: 20;
+      width: 100%;
+      max-width: 480px;
+      background: rgba(12, 18, 34, 0.6);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border-radius: 2.5rem;
+      padding: 2.5rem 1.8rem 2rem;
+      border: 1px solid rgba(80, 160, 255, 0.25);
+      box-shadow: 0 30px 60px -10px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 255, 255, 0.1) inset, 0 0 30px 0 rgba(30, 144, 255, 0.2);
+      transition: transform 0.2s ease;
+    }
 
-/* 🧊 Container */
-.container{
-  width:100%;
-  max-width:420px;
-  padding:20px;
-}
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(0, 200, 255, 0.4);
+      box-shadow: 0 40px 70px -5px #000000cc, 0 0 0 1px #4aa5ff40 inset;
+    }
 
-/* ✨ Glass card */
-.box{
-  padding:45px 30px;
-  border-radius:28px;
-  text-align:center;
+    /* avatar cosmic */
+    .avatar-ring {
+      position: absolute;
+      top: -58px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 116px;
+      height: 116px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #00c6ff, #0072ff, #a020f0);
+      padding: 4px;
+      box-shadow: 0 10px 35px 5px #00a6ff70;
+      animation: rotateGradient 6s linear infinite;
+    }
 
-  background:rgba(255,255,255,.08);
-  backdrop-filter:blur(22px);
-  border:1px solid rgba(255,255,255,.15);
+    @keyframes rotateGradient {
+      0% { filter: hue-rotate(0deg); }
+      100% { filter: hue-rotate(360deg); }
+    }
 
-  box-shadow:
-    0 0 40px rgba(0,198,255,.25),
-    0 0 90px rgba(127,0,255,.15);
+    .avatar {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #0a0f1f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border: 2px solid #0b121f;
+    }
 
-  animation:fadeUp 1s ease;
-}
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
 
-@keyframes fadeUp{
-  from{opacity:0;transform:translateY(30px)}
-  to{opacity:1;transform:translateY(0)}
-}
+    /* header */
+    .brand {
+      text-align: center;
+      margin-top: 1.8rem;
+      margin-bottom: 2rem;
+    }
 
-/* 🤖 Icon */
-.icon{
-  font-size:60px;
-  margin-bottom:12px;
-  background:linear-gradient(90deg,#00c6ff,#7f00ff);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  animation:pulseIcon 3s infinite;
-}
+    .title-main {
+      font-weight: 700;
+      font-size: 1.9rem;
+      letter-spacing: -0.02em;
+      background: linear-gradient(130deg, #b3ecff, #a0c8ff, #d9b3ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      line-height: 1.2;
+      text-shadow: 0 0 10px #5f9eff80;
+    }
 
-@keyframes pulseIcon{
-  50%{transform:scale(1.1)}
-}
+    .subtitle {
+      color: #a0b9da;
+      font-size: 1rem;
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-top: 0.2rem;
+      font-weight: 300;
+    }
 
-/* Titles */
-h3{
-  font-size:26px;
-  font-weight:700;
-}
+    .subtitle i {
+      color: #25d366;
+      filter: drop-shadow(0 0 6px #25d366);
+    }
 
-h6{
-  font-size:13px;
-  color:#bbb;
-  margin-bottom:25px;
-}
+    /* input group — futuristic */
+    .input-field {
+      background: rgba(0, 15, 30, 0.7);
+      border-radius: 60px;
+      display: flex;
+      align-items: center;
+      padding: 0.4rem 0.4rem 0.4rem 1.2rem;
+      border: 1px solid #2666aa60;
+      backdrop-filter: blur(4px);
+      margin: 1.8rem 0 1.2rem;
+      transition: border 0.3s, box-shadow 0.3s;
+    }
 
-h6 span{
-  color:#00c6ff;
-  font-weight:600;
-}
+    .input-field:focus-within {
+      border-color: #4ab5ff;
+      box-shadow: 0 0 0 3px #1e90ff30, 0 0 15px #00a6ff;
+    }
 
-/* Input */
-.input-wrap{
-  display:flex;
-  gap:8px;
-  padding:6px;
-  border-radius:50px;
-  background:rgba(255,255,255,.12);
-  border:1px solid rgba(255,255,255,.2);
-}
+    .input-field i {
+      color: #6caaff;
+      font-size: 1.1rem;
+      margin-right: 0.6rem;
+    }
 
-.input-wrap input{
-  flex:1;
-  background:transparent;
-  border:none;
-  outline:none;
-  padding:12px 18px;
-  color:#fff;
-}
+    .input-field input {
+      background: transparent;
+      border: none;
+      flex: 1;
+      padding: 0.9rem 0;
+      font-size: 1.1rem;
+      color: #f0f6ff;
+      font-weight: 400;
+      outline: none;
+      letter-spacing: 0.5px;
+    }
 
-.input-wrap button{
-  padding:12px 26px;
-  border-radius:50px;
-  border:none;
-  font-weight:600;
-  cursor:pointer;
+    .input-field input::placeholder {
+      color: #6b86a5;
+      font-weight: 300;
+      font-size: 0.95rem;
+    }
 
-  background:linear-gradient(90deg,#00c6ff,#0072ff);
-  box-shadow:0 0 18px rgba(0,198,255,.7);
-  transition:.3s;
-}
+    .input-field button {
+      background: linear-gradient(145deg, #1e3c5f, #0b2542);
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 0.7rem 1.7rem;
+      border-radius: 50px;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: 0.2s;
+      border: 1px solid #3a77b0;
+      box-shadow: 0 5px 10px #00000055;
+    }
 
-.input-wrap button:hover{
-  transform:scale(1.08);
-}
+    .input-field button:hover {
+      background: linear-gradient(145deg, #265a8c, #123456);
+      border-color: #7ac4ff;
+      transform: scale(1.02);
+      box-shadow: 0 0 15px #0077ff;
+    }
 
-/* Code */
-#pair{
-  margin-top:22px;
-}
+    /* pair result area */
+    .pair-output {
+      min-height: 70px;
+      margin: 0.2rem 0 1.5rem;
+      font-size: 1.1rem;
+    }
 
-.code{
-  font-family:monospace;
-  font-size:26px;
-  letter-spacing:3px;
-  padding:14px;
-  border-radius:14px;
-  background:rgba(0,255,255,.08);
-  border:1px solid #00ffff;
-  color:#00ffff;
-  cursor:pointer;
-  animation:pulse 1.5s infinite;
-}
+    .code-block {
+      background: rgba(0, 30, 50, 0.7);
+      border-radius: 40px;
+      padding: 0.8rem 2rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 1rem;
+      border: 1px solid #00c3ff60;
+      backdrop-filter: blur(10px);
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+      box-shadow: 0 5px 15px #00000050;
+    }
 
-@keyframes pulse{
-  50%{box-shadow:0 0 35px rgba(0,255,255,.9);}
-}
+    .code-block span {
+      color: #b3f0ff;
+      letter-spacing: 1px;
+      font-size: 1.2rem;
+    }
 
-.loading{
-  color:#00c6ff;
-}
-</style>
+    .code-block i {
+      color: #ffd966;
+      font-size: 1.1rem;
+    }
+
+    .code-block:hover {
+      background: #002f4e;
+      border-color: cyan;
+      box-shadow: 0 0 25px #00ccff;
+    }
+
+    /* status panel */
+    .status-panel {
+      display: flex;
+      justify-content: space-between;
+      background: rgba(0, 10, 25, 0.5);
+      border-radius: 50px;
+      padding: 0.9rem 1.8rem;
+      margin: 1.2rem 0 1.2rem;
+      border: 1px solid #2f5580;
+      font-weight: 400;
+      backdrop-filter: blur(6px);
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #c0dcff;
+    }
+
+    .online-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #0b3320;
+      padding: 0.2rem 1rem;
+      border-radius: 30px;
+      border: 1px solid #25d366;
+    }
+
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      background: #25d366;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #25d366;
+      animation: pulse-green 1.8s infinite;
+    }
+
+    @keyframes pulse-green {
+      0% { opacity: 0.6; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.2); }
+      100% { opacity: 0.6; transform: scale(0.9); }
+    }
+
+    /* instructions */
+    .steps {
+      background: rgba(18, 30, 48, 0.6);
+      padding: 1.3rem 1.5rem;
+      border-radius: 28px;
+      border: 1px dashed #4880b0;
+      margin: 1.3rem 0;
+      font-size: 0.95rem;
+    }
+
+    .steps ol {
+      margin-top: 0.5rem;
+      padding-left: 1.6rem;
+      color: #cbdef5;
+    }
+
+    .steps li {
+      margin: 0.5rem 0;
+      line-height: 1.5;
+    }
+
+    .steps i {
+      color: #7bb9ff;
+      width: 20px;
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      justify-content: center;
+      margin: 1.5rem 0 0.8rem;
+    }
+
+    .btn {
+      background: rgba(24, 42, 70, 0.8);
+      border: 1px solid #3d618a;
+      color: white;
+      padding: 0.8rem 1.6rem;
+      border-radius: 40px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      backdrop-filter: blur(6px);
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 0.95rem;
+    }
+
+    .btn-wa {
+      background: linear-gradient(145deg, #0f4c2b, #0a3620);
+      border-color: #25d366;
+    }
+
+    .btn-wa:hover {
+      background: #128c7e;
+      border-color: #a0ffb0;
+      box-shadow: 0 0 18px #25d366;
+    }
+
+    .btn-outline:hover {
+      background: rgba(60, 120, 200, 0.3);
+      border-color: #7bb9ff;
+    }
+
+    .footer-note {
+      font-size: 0.7rem;
+      color: #5e7d9e;
+      text-align: center;
+      margin-top: 1.8rem;
+      border-top: 1px solid #24475a;
+      padding-top: 1.2rem;
+    }
+
+    .toast {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      background: #141f30ee;
+      backdrop-filter: blur(10px);
+      color: #fff;
+      padding: 0.9rem 1.8rem;
+      border-radius: 60px;
+      font-weight: 500;
+      border-left: 4px solid #25d366;
+      box-shadow: 0 5px 25px #000000aa;
+      z-index: 999;
+      transform: translateX(400px);
+      transition: transform 0.3s ease;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    /* responsiveness */
+    @media (max-width: 440px) {
+      .card { padding: 2rem 1.2rem; }
+      .input-field { flex-wrap: wrap; background: transparent; padding: 0; }
+      .input-field input { width: 100%; background: #0f1b2f; border-radius: 60px; padding: 0.9rem 1.5rem; margin-bottom: 0.6rem; }
+      .input-field button { width: 100%; justify-content: center; }
+      .status-panel { flex-direction: column; gap: 0.6rem; }
+    }
+  </style>
 </head>
-
 <body>
-
-<!-- 🎵 Background Music (autoplay, hidden) -->
-<audio autoplay loop>
-  <source src="https://files.catbox.moe/48v57u.mpeg" type="audio/mpeg">
-</audio>
-
-<div class="orb one"></div>
-<div class="orb two"></div>
-
-<div class="container">
-  <div class="box">
-
-    <div class="icon">
-      <i class="fas fa-robot"></i>
-    </div>
-
-    <h3>⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉</h3>
-    <h6>Powered by <span>ᴅᴛᴢ ᴅᴜʟᴀ</span></h6>
-
-    <p style="font-size:12px;color:#aaa;margin-bottom:15px;">
-      Enter WhatsApp number with country code
-    </p>
-
-    <div class="input-wrap">
-      <input id="number" type="number" placeholder="947xxxxxxx">
-      <button id="submit">Get Code</button>
-    </div>
-
-    <div id="pair"></div>
-
+  <div class="cosmic-bg">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+    <div class="grid-lines"></div>
+    <div class="star-field" id="starfield"></div>
   </div>
-</div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.7/axios.min.js"></script>
+  <div class="toast" id="toastMsg"><i class="fas fa-check-circle" style="color:#25d366; margin-right:8px;"></i> <span id="toastText">Code copied</span></div>
 
-<script>
-const pair = document.getElementById("pair");
-const btn = document.getElementById("submit");
-const num = document.getElementById("number");
-
-async function Copy(){
-  const el = document.getElementById("copy");
-  await navigator.clipboard.writeText(el.innerText);
-  el.innerText="COPIED ✓";
-  setTimeout(()=>el.innerText=el.dataset.code,1000);
-}
-
-btn.onclick = async()=>{
-  if(!num.value){
-    pair.innerHTML="<span style='color:#ff5c5c'>⚠️ Enter number</span>";
-    return;
-  }
-
-  const number = num.value.replace(/\D/g,"");
-
-  pair.innerHTML="<span class='loading'><i class='fas fa-spinner fa-spin'></i> Generating Code...</span>";
-
-  try{
-    const {data} = await axios(`/code?number=${number}`);
-    const code = data.code || "ERROR";
-
-    pair.innerHTML=`
-      <div class="code" onclick="Copy()">
-        <span id="copy" data-code="${code}">${code}</span>
+  <div class="card">
+    <!-- avatar cosmic -->
+    <div class="avatar-ring">
+      <div class="avatar">
+        <img src="https://files.catbox.moe/7e701h.jpg" alt="dtz bot">
       </div>
-      <p style="font-size:11px;color:#aaa;margin-top:6px">Tap to copy</p>
-    `;
-  }catch{
-    pair.innerHTML="<span style='color:#ff5c5c'>❌ Server Error</span>";
-  }
-};
-</script>
+    </div>
 
+    <div class="brand">
+      <div class="title-main">✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦</div>
+      <div class="subtitle"><i class="fab fa-whatsapp"></i> ᴘᴀɪʀɪɴɢ ʜᴜʙ  •  ᴄʀᴇᴀᴛᴇᴅ ʙʏ ☠︎︎ ᴅᴄᴛ ᴅᴜʟᴀ ᴅᴇᴠ </> ☠︎︎</div>
+    </div>
+
+    <!-- phone input -->
+    <div class="input-field">
+      <i class="fas fa-phone-alt"></i>
+      <input type="text" id="phoneNumber" placeholder="e.g., 947xxxxxxxx" value="">
+      <button id="submitBtn"><i class="fas fa-paper-plane"></i> <span class="btn-text">Submit</span></button>
+    </div>
+
+    <!-- dynamic pair output -->
+    <div class="pair-output" id="pairDisplay"></div>
+    <div id="waitingIndicator" style="text-align:center; margin:5px 0; min-height:24px; color:#99ccff;"><i class="fas fa-circle-notch fa-spin"></i> </div>
+
+    <!-- status panel -->
+    <div class="status-panel">
+      <div class="status-item"><i class="far fa-clock"></i> <span id="liveClock">00:00:00</span></div>
+      <div class="online-badge"><span class="pulse-dot"></span> <span id="statusText">Online</span></div>
+    </div>
+
+    <!-- pairing steps -->
+    <div class="steps">
+      <i class="fas fa-dragon" style="color:#a0d0ff; margin-right:6px;"></i><strong>ᴘᴀɪʀɪɴɢ ʀɪᴛᴜᴀʟ</strong>
+      <ol>
+        <li><i class="fas fa-globe"></i> Enter number with country code</li>
+        <li><i class="fas fa-key"></i> Tap Submit & wait for the code</li>
+        <li><i class="fab fa-whatsapp"></i> WA » linked devices » pair with code</li>
+        <li><i class="fas fa-check-circle" style="color:#25d366;"></i> Enjoy the dragon power</li>
+      </ol>
+    </div>
+
+    <!-- actions -->
+    <div class="action-row">
+      <button class="btn btn-wa" id="joinChannel"><i class="fab fa-whatsapp"></i> Join Channel</button>
+      <button class="btn btn-outline" id="clearBtn"><i class="fas fa-undo-alt"></i> Clear</button>
+    </div>
+
+    <div class="footer-note">
+      <i class="fas fa-shield-alt"></i> unofficial wa tool • use wisely
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ---------- background stars ----------
+      const starfield = document.getElementById('starfield');
+      for (let i = 0; i < 120; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 100 + '%';
+        star.style.animationDelay = Math.random() * 5 + 's';
+        star.style.width = (Math.random() * 3 + 1) + 'px';
+        star.style.height = star.style.width;
+        starfield.appendChild(star);
+      }
+
+      // ---------- live clock ----------
+      const clockSpan = document.getElementById('liveClock');
+      function updateClock() {
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2,'0');
+        const mm = String(now.getMinutes()).padStart(2,'0');
+        const ss = String(now.getSeconds()).padStart(2,'0');
+        clockSpan.innerText = `${hh}:${mm}:${ss}`;
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      // ---------- DOM elements ----------
+      const phoneInput = document.getElementById('phoneNumber');
+      const submitBtn = document.getElementById('submitBtn');
+      const pairDiv = document.getElementById('pairDisplay');
+      const waitingIndicator = document.getElementById('waitingIndicator');
+      const statusSpan = document.getElementById('statusText');
+      const toast = document.getElementById('toastMsg');
+      const toastText = document.getElementById('toastText');
+
+      // hide waiting initially
+      waitingIndicator.style.display = 'none';
+
+      // show toast function
+      function showToast(msg) {
+        toastText.innerText = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2700);
+      }
+
+      // global copy function (preserves /code?number= in spirit, but handles display)
+      window.copyCode = async function(element) {
+        // extract clean code (removes any extra text)
+        let codeText = element.innerText;
+        // handle both "CODE: 123ABC" and just "123ABC" formats
+        const match = codeText.match(/([A-Z0-9]{5,})/i);
+        const code = match ? match[1] : codeText.replace(/[^A-Z0-9]/gi, '');
+        
+        try {
+          await navigator.clipboard.writeText(code);
+          // visual feedback
+          const originalHTML = element.innerHTML;
+          element.innerHTML = '<i class="fas fa-check" style="color:#9bef8f;"></i> COPIED <span class="pulse-dot" style="background:#9bef8f;"></span>';
+          element.style.background = '#0a3f30';
+          showToast('Pairing code copied');
+          setTimeout(() => {
+            element.innerHTML = originalHTML;
+            element.style.background = '';
+          }, 1500);
+        } catch {
+          showToast('Press Ctrl+C to copy');
+        }
+      };
+
+      // submit logic with /code?number= fetch
+      submitBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        let raw = phoneInput.value.trim();
+
+        if (!raw) {
+          pairDiv.innerHTML = '<div style="color:#ffa07a; padding:0.6rem;"><i class="fas fa-exclamation-triangle"></i> enter your number</div>';
+          return;
+        }
+        const digits = raw.replace(/\D/g, '');
+        if (digits.length < 10 || digits.length > 15) {
+          pairDiv.innerHTML = '<div style="color:#ffa07a;"><i class="fas fa-times-circle"></i> invalid length (need 10-15 digits)</div>';
+          return;
+        }
+
+        // format display
+        phoneInput.value = '+' + digits;
+        statusSpan.innerText = 'Processing';
+        waitingIndicator.style.display = 'block';
+        waitingIndicator.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> contacting the dragon...';
+
+        try {
+          // 🔥 actual fetch using /code?number= (preserved exactly)
+          const response = await fetch(`/code?number=${digits}`);
+          
+          // handle non-OK response
+          if (!response.ok) {
+            throw new Error(`Server responded with ${response.status}`);
+          }
+          
+          const data = await response.json();
+          // expected: { code: "ABCD123" } or similar
+          const code = data.code || 'NO_CODE';
+          
+          // create clickable code element
+          pairDiv.innerHTML = `<div class="code-block" onclick="copyCode(this)" data-code="${code}" style="cursor:pointer;"> 
+            <i class="fas fa-dragon"></i> CODE: <span style="color:#aae0ff;">${code}</span> <i class="fas fa-copy" style="color:#bbb;"></i>
+          </div>`;
+          
+          statusSpan.innerText = 'Paired';
+          waitingIndicator.style.display = 'none';
+        } catch (error) {
+          console.error('Fetch error:', error);
+          pairDiv.innerHTML = '<div style="color:#ff9494;"><i class="fas fa-skull"></i> service misfire. try again.</div>';
+          statusSpan.innerText = 'Error';
+          waitingIndicator.style.display = 'none';
+        }
+      });
+
+      // enter key
+      phoneInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submitBtn.click();
+      });
+
+      // clear button
+      document.getElementById('clearBtn').addEventListener('click', () => {
+        phoneInput.value = '';
+        phoneInput.style.color = '';
+        pairDiv.innerHTML = '';
+        statusSpan.innerText = 'Online';
+        waitingIndicator.style.display = 'none';
+      });
+
+      // join channel
+      document.getElementById('joinChannel').addEventListener('click', () => {
+        window.open('https://chat.whatsapp.com/GYFkafbxbD8JHDCPzXPlIi', '_blank');
+      });
+
+      // also keep window.Copy for any legacy calls (but we use copyCode now)
+      window.Copy = function() {
+        const el = document.getElementById('copy'); // backward compatibility
+        if (el) window.copyCode(el);
+      };
+    })();
+  </script>
+  <!-- ensure any dynamically generated #copy can also trigger copyCode -->
 </body>
 </html>

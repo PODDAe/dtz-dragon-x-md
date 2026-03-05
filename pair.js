@@ -24,9 +24,9 @@ const {
   downloadContentFromMessage,
   proto,
   DisconnectReason
-} = require('baileys');
+} = require('dct-dula-baileys');
 // ---------------- CONFIG ----------------
-const BOT_NAME_FANCY = '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+const BOT_NAME_FANCY = '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
 const config = {
   AUTO_VIEW_STATUS: 'true',
@@ -36,18 +36,18 @@ const config = {
   PREFIX: '.',
   MAX_RETRIES: 3,
   GROUP_INVITE_LINK: 'https://chat.whatsapp.com/GYFkafbxbD8JHDCPzXPlIi',
-  RCD_IMAGE_PATH: 'https://files.catbox.moe/ri4il5.jpg',
+  RCD_IMAGE_PATH: 'https://files.catbox.moe/7e701h.jpg',
   NEWSLETTER_JID: '120363421675697127@newsletter',
   OTP_EXPIRY: 300000,
   WORK_TYPE: 'public',
   OWNER_NUMBER: process.env.OWNER_NUMBER || '94752978237',
   CHANNEL_LINK: 'https://whatsapp.com/channel/0029Vb6aIrGLo4hhAAGH6f3U',
-  BOT_NAME: '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉',
+  BOT_NAME: '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦',
   BOT_VERSION: '1.0.0V',
   OWNER_NAME: 'ᴅᴛᴢ ᴅᴜʟᴀ💔',
-  IMAGE_PATH: 'https://files.catbox.moe/ri4il5.jpg',
-  BOT_FOOTER: '> *©ᴘᴏᴡᴇʀᴅ ʙʏ ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉*',
-  BUTTON_IMAGES: { ALIVE: 'https://files.catbox.moe/ri4il5.jpg' }
+  IMAGE_PATH: 'https://files.catbox.moe/7e701h.jpg',
+  BOT_FOOTER: '> *©ᴘᴏᴡᴇʀᴅ ʙʏ ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦*',
+  BUTTON_IMAGES: { ALIVE: 'https://files.catbox.moe/7e701h.jpg' }
 };
 // ---------------- MONGO SETUP ----------------
 
@@ -64,30 +64,40 @@ async function initMongo() {
   try {
     if (mongoClient && mongoClient.topology && mongoClient.topology.isConnected && mongoClient.topology.isConnected()) return;
   } catch(e){}
-  mongoClient = new MongoClient(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-  await mongoClient.connect();
-  mongoDB = mongoClient.db(MONGO_DB);
+  
+  try {
+    mongoClient = new MongoClient(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true, serverSelectionTimeoutMS: 5000 });
+    await mongoClient.connect();
+    mongoDB = mongoClient.db(MONGO_DB);
 
-  sessionsCol = mongoDB.collection('sessions');
-  numbersCol = mongoDB.collection('numbers');
-  adminsCol = mongoDB.collection('admins');
-  newsletterCol = mongoDB.collection('newsletter_list');
-  configsCol = mongoDB.collection('configs');
-  newsletterReactsCol = mongoDB.collection('newsletter_reacts');
+    sessionsCol = mongoDB.collection('sessions');
+    numbersCol = mongoDB.collection('numbers');
+    adminsCol = mongoDB.collection('admins');
+    newsletterCol = mongoDB.collection('newsletter_list');
+    configsCol = mongoDB.collection('configs');
+    newsletterReactsCol = mongoDB.collection('newsletter_reacts');
 
-  await sessionsCol.createIndex({ number: 1 }, { unique: true });
-  await numbersCol.createIndex({ number: 1 }, { unique: true });
-  await newsletterCol.createIndex({ jid: 1 }, { unique: true });
-  await newsletterReactsCol.createIndex({ jid: 1 }, { unique: true });
-  await configsCol.createIndex({ number: 1 }, { unique: true });
-  console.log('✅ Mongo initialized and collections ready');
+    await sessionsCol.createIndex({ number: 1 }, { unique: true });
+    await numbersCol.createIndex({ number: 1 }, { unique: true });
+    await newsletterCol.createIndex({ jid: 1 }, { unique: true });
+    await newsletterReactsCol.createIndex({ jid: 1 }, { unique: true });
+    await configsCol.createIndex({ number: 1 }, { unique: true });
+    console.log('✅ Mongo initialized and collections ready');
+  } catch (error) {
+    console.warn('⚠️ MongoDB connection failed:', error.message);
+    console.warn('App will continue to run without persistent storage. Set MONGO_URI environment variable with valid credentials.');
+    mongoClient = null;
+    mongoDB = null;
+  }
 }
 
 // ---------------- Mongo helpers ----------------
 
 async function saveCredsToMongo(number, creds, keys = null) {
   try {
+    if (!mongoDB || !sessionsCol) return;
     await initMongo();
+    if (!sessionsCol) return;
     const sanitized = number.replace(/[^0-9]/g, '');
     const doc = { number: sanitized, creds, keys, updatedAt: new Date() };
     await sessionsCol.updateOne({ number: sanitized }, { $set: doc }, { upsert: true });
@@ -97,7 +107,9 @@ async function saveCredsToMongo(number, creds, keys = null) {
 
 async function loadCredsFromMongo(number) {
   try {
+    if (!mongoDB || !sessionsCol) return null;
     await initMongo();
+    if (!sessionsCol) return null;
     const sanitized = number.replace(/[^0-9]/g, '');
     const doc = await sessionsCol.findOne({ number: sanitized });
     return doc || null;
@@ -133,7 +145,9 @@ async function removeNumberFromMongo(number) {
 
 async function getAllNumbersFromMongo() {
   try {
+    if (!mongoDB || !numbersCol) return [];
     await initMongo();
+    if (!numbersCol) return [];
     const docs = await numbersCol.find({}).toArray();
     return docs.map(d => d.number);
   } catch (e) { console.error('getAllNumbersFromMongo', e); return []; }
@@ -141,7 +155,9 @@ async function getAllNumbersFromMongo() {
 
 async function loadAdminsFromMongo() {
   try {
+    if (!mongoDB || !adminsCol) return [];
     await initMongo();
+    if (!adminsCol) return [];
     const docs = await adminsCol.find({}).toArray();
     return docs.map(d => d.jid || d.number).filter(Boolean);
   } catch (e) { console.error('loadAdminsFromMongo', e); return []; }
@@ -183,7 +199,9 @@ async function removeNewsletterFromMongo(jid) {
 
 async function listNewslettersFromMongo() {
   try {
+    if (!mongoDB || !newsletterCol) return [];
     await initMongo();
+    if (!newsletterCol) return [];
     const docs = await newsletterCol.find({}).toArray();
     return docs.map(d => ({ jid: d.jid, emojis: Array.isArray(d.emojis) ? d.emojis : [] }));
   } catch (e) { console.error('listNewslettersFromMongo', e); return []; }
@@ -612,7 +630,7 @@ if (!isOwner) {
     // 🔹 Load bot name dynamically
     const sanitized = (number || '').replace(/[^0-9]/g, '');
     let cfg = await loadUserConfigFromMongo(sanitized) || {};
-    let botName = cfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    let botName = cfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
     // 🔹 Fake contact for quoting
     const shonux = {
@@ -687,7 +705,7 @@ case 'mp4': {
         // 1. Bot Name & Config Load
         const sanitized = (sender.split('@')[0] || '').replace(/[^0-9]/g, '');
         let cfg = await loadUserConfigFromMongo(sanitized) || {};
-        let botName = cfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+        let botName = cfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
         // 2. Input Handling
         let text = (args.join(' ') || '').trim();
@@ -937,7 +955,7 @@ END:VCARD` } }
 
     // 3. Load Configuration
     const currentConfig = await loadUserConfigFromMongo(sanitized) || {};
-    const botName = currentConfig.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉'; // Default name fallback
+    const botName = currentConfig.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦'; // Default name fallback
     const prefix = currentConfig.PREFIX || config.PREFIX;
 
     // 4. Construct the Interactive Menu
@@ -1703,7 +1721,7 @@ case 'emojis': {
   }
   break;
 }
-const { downloadMediaMessage } = require('baileys');
+const { downloadMediaMessage } = require('dct-dula-baileys');
 
 // ... inside your switch/case block
 
@@ -1718,11 +1736,11 @@ case 'gpt': {
     // --- Config & Bot Name ---
     const sanitized = (sender || '').replace(/[^0-9]/g, '');
     let cfg = await loadUserConfigFromMongo(sanitized) || {};
-    let botName = cfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    let botName = cfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
     if (!q) {
       await socket.sendMessage(sender, { 
-        text: `*👸 ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 : 𝙿𝚕𝚎𝚊𝚜𝚎 𝙿𝚛𝚘𝚟𝚒𝚍𝚎 𝙰 𝚀𝚞𝚎𝚜𝚝𝚒𝚘𝚗 !*`,
+        text: `*👸 ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ : 𝙿𝚕𝚎𝚊𝚜𝚎 𝙿𝚛𝚘𝚟𝚒𝚍𝚎 𝙰 𝚀𝚞𝚎𝚜𝚝𝚒𝚘𝚗 !*`,
         buttons: [
           { buttonId: `${config.PREFIX}menu`, buttonText: { displayText: '📄 𝐌𝐀𝐈𝐍 𝐌𝐄𝐍𝐔' }, type: 1 }
         ]
@@ -1736,13 +1754,13 @@ case 'gpt': {
       message: { 
         contactMessage: { 
           displayName: botName, 
-          vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${botName};;;;\nFN:${botName}\nORG:⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉\nTEL;type=CELL;type=VOICE;waid=94700000000:+94 70 000 0000\nEND:VCARD` 
+          vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${botName};;;;\nFN:${botName}\nORG:✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦\nTEL;type=CELL;type=VOICE;waid=94700000000:+94 70 000 0000\nEND:VCARD` 
         } 
       }
     };
 
     await socket.sendMessage(sender, { react: { text: '🧠', key: msg.key } });
-    await socket.sendMessage(sender, { text: '*👸 ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 : 𝙰𝙸 𝙸𝚜 𝚃𝚑𝚒𝚗𝚔𝚒𝚗𝚐...*', quoted: metaQuote });
+    await socket.sendMessage(sender, { text: '*👸 ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ : 𝙰𝙸 𝙸𝚜 𝚃𝚑𝚒𝚗𝚔𝚒𝚗𝚐...*', quoted: metaQuote });
 
     // --- System Prompt & API Logic ---
     // API එකට යවන System Prompt එක (බොට්ගේ හැසිරීම)
@@ -1766,7 +1784,7 @@ case 'gpt': {
 
     // --- Final Message with Style ---
     await socket.sendMessage(sender, {
-      text: `👸 *⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 𝐀𝐈 𝐂𝐇𝐀𝐓* 🧠\n\n${aiReply}\n\n*✨ 𝙼𝚊𝚍𝚎 𝙱𝚢 🩵 ᴅᴛᴢ  🩵*`,
+      text: `👸 *✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ 𝐀𝐈 𝐂𝐇𝐀𝐓* 🧠\n\n${aiReply}\n\n*✨ 𝙼𝚊𝚍𝚎 𝙱𝚢 🩵 ᴅᴛᴢ  🩵*`,
       footer: `🤖 ${botName}`,
       buttons: [
         { buttonId: `${config.PREFIX}menu`, buttonText: { displayText: '📄 𝐌𝐀𝐈𝙽 𝐌𝐄𝐍𝐔' }, type: 1 },
@@ -1779,7 +1797,7 @@ case 'gpt': {
   } catch (err) {
     console.error("Error in AI chat:", err);
     await socket.sendMessage(sender, { 
-      text: '*👸 ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 : 𝙰𝙿𝙸 𝙴𝚛𝚛𝚘𝚛 𝚃𝚛𝚢 𝙰𝚐𝚊𝚒𝚗 𝙻𝚊𝚝𝚎𝚛 !*',
+      text: '*👸 ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ : 𝙰𝙿𝙸 𝙴𝚛𝚛𝚘𝚛 𝚃𝚛𝚢 𝙰𝚐𝚊𝚒𝚗 𝙻𝚊𝚝𝚎𝚛 !*',
       buttons: [
         { buttonId: `${config.PREFIX}menu`, buttonText: { displayText: '📄 𝐌𝐀𝐈𝙽 𝐌𝐄𝐍𝐔' }, type: 1 }
       ]
@@ -1798,7 +1816,7 @@ case 'upload': {
         const fs = require('fs');
         const os = require('os');
         const path = require('path');
-        const { downloadMediaMessage } = require('baileys'); 
+        const { downloadMediaMessage } = require('dct-dula-baileys'); 
         
         // Send reaction first
         await socket.sendMessage(sender, {
@@ -1927,17 +1945,17 @@ case 'upload': {
         };
 
         // --- NEW BUTTON RESPONSE CODE ---
-        const botLogo = 'https://files.catbox.moe/ri4il5.jpg'; // REPLACE WITH YOUR LOGO URL
+        const botLogo = 'https://files.catbox.moe/7e701h.jpg'; // REPLACE WITH YOUR LOGO URL
 
         // Construct Interactive Message with Buttons
-        const { proto, generateWAMessageFromContent } = require('baileys');
+        const { proto, generateWAMessageFromContent } = require('dct-dula-baileys');
         
         const msgParams = {
             viewOnceMessage: {
                 message: {
                     interactiveMessage: {
                         body: {
-                            text: `╭━━❮ *⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 UPLOADER* ❯━━╮
+                            text: `╭━━❮ *✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ UPLOADER* ❯━━╮
 │
 │ 📁 *Type:* ${mediaType}
 │ 📦 *Size:* ${formatBytes(mediaBuffer.length)}
@@ -1945,19 +1963,19 @@ case 'upload': {
 │
 ╰━━━━━━━━━━━━━━━━━━━━━━⪼
 
-> ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 𝐕𝟐 🤍`
+> ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ 𝐕𝟐 🤍`
                         },
                         footer: {
-                            text: "⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉"
+                            text: "✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦"
                         },
                         header: {
                             title: "Media Uploaded Successfully",
-                            subtitle: "⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉",
+                            subtitle: "✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦",
                             hasMediaAttachment: false
                         },
                         contextInfo: {
                             externalAdReply: {
-                                title: "⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 UPLOADER",
+                                title: "✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ UPLOADER",
                                 body: "Click buttons below to copy or open",
                                 thumbnailUrl: botLogo,
                                 sourceUrl: mediaUrl,
@@ -2020,7 +2038,7 @@ ${error.message}`
         const messages = {
             noCity: "❗ *Please provide a city name!* \n📋 *Usage*: .weather [city name]",
             weather: (data) => `
-* ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 ᴡᴇᴀᴛʜᴇʀ ʀᴇᴘᴏʀᴛ *
+* ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ ᴡᴇᴀᴛʜᴇʀ ʀᴇᴘᴏʀᴛ *
 
 *◈  ${data.name}, ${data.sys.country}  ◈*
 
@@ -2036,7 +2054,7 @@ ${error.message}`
 *┣ 🌎 𝐏ressure :* ${data.main.pressure} hPa
 *╰──────────●●➤*
 
-*⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉*
+*✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦*
 `,
             cityNotFound: "🚫 *City not found!* \n🔍 Please check the spelling and try again.",
             error: "⚠️ *An error occurred!* \n🔄 Please try again later."
@@ -2095,7 +2113,7 @@ case 'aiimg2': {
         // 🔹 Load bot name dynamically
         const sanitized = (number || '').replace(/[^0-9]/g, '');
         let cfg = await loadUserConfigFromMongo(sanitized) || {};
-        let botName = cfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+        let botName = cfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
         // 🔹 Fake contact with dynamic bot name
         const shonux = {
@@ -2159,7 +2177,7 @@ END:VCARD`
 case 'pair': {
     try {
         const axios = require('axios');
-        const { generateWAMessageFromContent, proto } = require('baileys');
+        const { generateWAMessageFromContent, proto } = require('dct-dula-baileys');
 
         // 1. පණිවිඩය සහ අංකය ලබා ගැනීම
         let text = (msg.message?.conversation || 
@@ -2237,11 +2255,11 @@ case 'pair': {
 ╰━━━━━━━━━━━━━━━━━━━━━━━━━━╯`
                         }),
                         footer: proto.Message.InteractiveMessage.Footer.create({
-                            text: "⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 • Secure Connection"
+                            text: "✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ • Secure Connection"
                         }),
                         header: proto.Message.InteractiveMessage.Header.create({
                             title: "",
-                            subtitle: "⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉",
+                            subtitle: "✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦",
                             hasMediaAttachment: false
                         }),
                         nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
@@ -2498,13 +2516,13 @@ case 'pp': {
         console.log('Sending message to user...');
         await socket.sendMessage(sender, {
             text: formatMessage(
-                '🏏 ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 MINI CEICKET NEWS🏏',
+                '🏏 ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ MINI CEICKET NEWS🏏',
                 `📢 *${title}*\n\n` +
                 `🏆 *mark*: ${score}\n` +
                 `🎯 *to win*: ${to_win}\n` +
                 `📈 *now speed*: ${crr}\n\n` +
                 `🌐 *link*: ${link}`,
-                '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉'
+                '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦'
             )
         });
         console.log('Message sent successfully.');
@@ -2557,9 +2575,9 @@ case 'pp': {
         await socket.sendMessage(sender, {
             image: { url: thumbnailUrl },
             caption: formatMessage(
-                '📰 ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 නවතම පුවත් 📰',
+                '📰 ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ නවතම පුවත් 📰',
                 `📢 *${title}*\n\n${desc}\n\n🕒 *Date*: ${date || 'තවම ලබාදීලා නැත'}\n🌐 *Link*: ${link}`,
-                '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉'
+                '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦'
             )
         });
     } catch (error) {
@@ -2652,7 +2670,7 @@ case 'fbvideo': {
         // 3. Bot Name සහ Config Load කිරීම (Fb.js style)
         const sanitized = (sender.split('@')[0] || '').replace(/[^0-9]/g, '');
         let cfg = await loadUserConfigFromMongo(sanitized) || {};
-        let botName = cfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+        let botName = cfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
         // 4. Fake Contact Message සැකසීම (Fb.js style)
         const shonux = {
@@ -2703,7 +2721,7 @@ END:VCARD`
             return await socket.sendMessage(sender, { text: `❌ *Video too large: ${size} MB*` }, { quoted: shonux });
         }
 
-        // 8. වීඩියෝව යැවීම (⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 Style Caption සමඟ)
+        // 8. වීඩියෝව යැවීම (✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ Style Caption සමඟ)
         await socket.sendMessage(sender, {
             video: Buffer.from(videoRes.data),
             mimetype: "video/mp4",
@@ -2719,8 +2737,8 @@ END:VCARD`
             contextInfo: {
                 externalAdReply: {
                     title: `${botName} FB DOWNLOADER`,
-                    body: "ᴅᴏᴡɴʟᴏᴀᴅᴇᴅ ʙʏ ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉",
-                    thumbnailUrl: result.thumbnail || "https://files.catbox.moe/ri4il5.jpg",
+                    body: "ᴅᴏᴡɴʟᴏᴀᴅᴇᴅ ʙʏ ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦",
+                    thumbnailUrl: result.thumbnail || "https://files.catbox.moe/7e701h.jpg",
                     sourceUrl: url,
                     mediaType: 1,
                     renderLargerThumbnail: true
@@ -2887,7 +2905,7 @@ case 'apk': {
         // ✅ Load bot name dynamically
         const sanitized = (number || '').replace(/[^0-9]/g, '');
         let cfg = await loadUserConfigFromMongo(sanitized) || {};
-        let botName = cfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+        let botName = cfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
         // ✅ Fake Meta contact message
         const shonux = {
@@ -2953,7 +2971,7 @@ END:VCARD`
         // Catch block Meta mention
         const sanitized = (number || '').replace(/[^0-9]/g, '');
         let cfg = await loadUserConfigFromMongo(sanitized) || {};
-        let botName = cfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+        let botName = cfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
         const shonux = {
             key: {
@@ -2990,7 +3008,7 @@ case 'xvdl': {
         // ✅ Load bot name dynamically
         const sanitized = (number || '').replace(/[^0-9]/g, '');
         let cfg = await loadUserConfigFromMongo(sanitized) || {};
-        let botName = cfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+        let botName = cfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
         // ✅ Fake Meta contact message
         const shonux = {
@@ -3107,7 +3125,7 @@ case 'save': {
   try {
     const quotedMsg = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
     if (!quotedMsg) {
-      return await socket.sendMessage(sender, { text: '*👸 ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 : 𝙿𝚕𝚎𝚊𝚜𝚎 𝚁𝚎𝚙𝚕𝚢 𝚃𝚘 𝙰 𝚂𝚝𝚊𝚝𝚞𝚜 !*' }, { quoted: msg });
+      return await socket.sendMessage(sender, { text: '*👸 ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ : 𝙿𝚕𝚎𝚊𝚜𝚎 𝚁𝚎𝚙𝚕𝚢 𝚃𝚘 𝙰 𝚂𝚝𝚊𝚝𝚞𝚜 !*' }, { quoted: msg });
     }
 
     try { await socket.sendMessage(sender, { react: { text: '🎴', key: msg.key } }); } catch(e){}
@@ -3118,11 +3136,11 @@ case 'save': {
     if (quotedMsg.imageMessage || quotedMsg.videoMessage || quotedMsg.audioMessage || quotedMsg.documentMessage || quotedMsg.stickerMessage) {
       const media = await downloadQuotedMedia(quotedMsg);
       if (!media || !media.buffer) {
-        return await socket.sendMessage(sender, { text: '*👸 ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 : 𝙵𝚊𝚒𝚕𝚎𝚍 𝚃𝚘 𝙳𝚘𝚠𝚗𝚕𝚘𝚊𝚍 𝙼𝚎𝚍𝚒𝚊 !*' }, { quoted: msg });
+        return await socket.sendMessage(sender, { text: '*👸 ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ : 𝙵𝚊𝚒𝚕𝚎𝚍 𝚃𝚘 𝙳𝚘𝚠𝚗𝚕𝚘𝚊𝚍 𝙼𝚎𝚍𝚒𝚊 !*' }, { quoted: msg });
       }
 
       let captionText = media.caption || '';
-      const botCaption = `\n\n👸 *⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 𝐒𝐓𝐀𝐓𝐔𝐒 𝐒𝐀𝐕𝐄𝐑* 📥\n\n*✨ 𝙼𝚊𝚍𝚎 𝙱𝚢 🩵 ᴅᴛᴢ  🩵*`;
+      const botCaption = `\n\n👸 *✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ 𝐒𝐓𝐀𝐓𝐔𝐒 𝐒𝐀𝐕𝐄𝐑* 📥\n\n*✨ 𝙼𝚊𝚍𝚎 𝙱𝚢 🩵 ᴅᴛᴢ  🩵*`;
 
       if (quotedMsg.imageMessage) {
         await socket.sendMessage(saveChat, { image: media.buffer, caption: captionText + botCaption });
@@ -3131,35 +3149,35 @@ case 'save': {
       } else if (quotedMsg.audioMessage) {
         await socket.sendMessage(saveChat, { audio: media.buffer, mimetype: media.mime || 'audio/mp4', ptt: media.ptt || false });
       } else if (quotedMsg.documentMessage) {
-        const fname = media.fileName || `⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉Saved.${(await FileType.fromBuffer(media.buffer))?.ext || 'bin'}`;
+        const fname = media.fileName || `✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦Saved.${(await FileType.fromBuffer(media.buffer))?.ext || 'bin'}`;
         await socket.sendMessage(saveChat, { document: media.buffer, fileName: fname, mimetype: media.mime || 'application/octet-stream', caption: botCaption });
       } else if (quotedMsg.stickerMessage) {
         await socket.sendMessage(saveChat, { sticker: media.buffer });
       }
 
-      await socket.sendMessage(sender, { text: '*👸 ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 𝐒𝐓𝐀𝐓𝐔𝐒 𝐒𝐀𝐕𝐄𝐑* 💫\n\n*✅ 𝙳𝚘𝚠𝚗𝚕𝚘𝚊𝚍𝚎𝚍 𝚂𝚞𝚌𝚌𝚎𝚜𝚜𝚏𝚞𝚕𝚕𝚢 !*' }, { quoted: msg });
+      await socket.sendMessage(sender, { text: '*👸 ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ 𝐒𝐓𝐀𝐓𝐔𝐒 𝐒𝐀𝐕𝐄𝐑* 💫\n\n*✅ 𝙳𝚘𝚠𝚗𝚕𝚘𝚊𝚍𝚎𝚍 𝚂𝚞𝚌𝚌𝚎𝚜𝚜𝚏𝚞𝚕𝚕𝚢 !*' }, { quoted: msg });
 
     } else if (quotedMsg.conversation || quotedMsg.extendedTextMessage) {
       const text = quotedMsg.conversation || quotedMsg.extendedTextMessage.text;
-      await socket.sendMessage(saveChat, { text: `👸 *⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 𝐒𝐓𝐀𝐓𝐔𝐒 𝐒𝐀𝐕𝐄𝐑* 📥\n\n${text}\n\n*✨ 𝙼𝚊𝚍𝚎 𝙱𝚢 🩵 ᴅᴛᴢ  🩵*` });
-      await socket.sendMessage(sender, { text: '*👸 ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 𝐒𝐓𝐀𝐓𝐔𝐒 𝐒𝐀𝐕𝐄𝐑* 💫\n\n*✅ 𝚃𝚎𝚡𝚝 𝚂𝚊𝚟𝚎𝚍 𝚂𝚞𝚌𝚌𝚎𝚜𝚜𝚏𝚞𝚕𝚕𝚢 !*' }, { quoted: msg });
+      await socket.sendMessage(saveChat, { text: `👸 *✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ 𝐒𝐓𝐀𝐓𝐔𝐒 𝐒𝐀𝐕𝐄𝐑* 📥\n\n${text}\n\n*✨ 𝙼𝚊𝚍𝚎 𝙱𝚢 🩵 ᴅᴛᴢ  🩵*` });
+      await socket.sendMessage(sender, { text: '*👸 ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ 𝐒𝐓𝐀𝐓𝐔𝐒 𝐒𝐀𝐕𝐄𝐑* 💫\n\n*✅ 𝚃𝚎𝚡𝚝 𝚂𝚊𝚟𝚎𝚍 𝚂𝚞𝚌𝚌𝚎𝚜𝚜𝚏𝚞𝚕𝚕𝚢 !*' }, { quoted: msg });
     } else {
       if (typeof socket.copyNForward === 'function') {
         try {
           const key = msg.message?.extendedTextMessage?.contextInfo?.stanzaId || msg.key;
           await socket.copyNForward(saveChat, msg.key, true);
-          await socket.sendMessage(sender, { text: '*👸 ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 𝐒𝐓𝐀𝐓𝐔𝐒 𝐒𝐀𝐕𝐄𝐑* 💫\n\n*✅ 𝙵𝚘𝚛𝚠𝚊𝚛𝚍𝚎𝚍 𝚂𝚞𝚌𝚌𝚎𝚜𝚜𝚏𝚞𝚕𝚕𝚢 !*' }, { quoted: msg });
+          await socket.sendMessage(sender, { text: '*👸 ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ 𝐒𝐓𝐀𝐓𝐔𝐒 𝐒𝐀𝐕𝐄𝐑* 💫\n\n*✅ 𝙵𝚘𝚛𝚠𝚊𝚛𝚍𝚎𝚍 𝚂𝚞𝚌𝚌𝚎𝚜𝚜𝚏𝚞𝚕𝚕𝚢 !*' }, { quoted: msg });
         } catch (e) {
-          await socket.sendMessage(sender, { text: '*👸 ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 : 𝙴𝚛𝚛𝚘𝚛 𝙵𝚘𝚛𝚠𝚊𝚛𝚍𝚒𝚗𝚐 𝙼𝚎𝚜𝚜𝚊𝚐𝚎 !*' }, { quoted: msg });
+          await socket.sendMessage(sender, { text: '*👸 ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ : 𝙴𝚛𝚛𝚘𝚛 𝙵𝚘𝚛𝚠𝚊𝚛𝚍𝚒𝚗𝚐 𝙼𝚎𝚜𝚜𝚊𝚐𝚎 !*' }, { quoted: msg });
         }
       } else {
-        await socket.sendMessage(sender, { text: '*👸 ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 : 𝚄𝚗𝚜𝚞𝚙𝚙𝚘𝚛𝚝𝚎𝚍 𝙼𝚎𝚜𝚜𝚊𝚐𝚎 𝚃𝚢𝚙𝚎 !*' }, { quoted: msg });
+        await socket.sendMessage(sender, { text: '*👸 ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ : 𝚄𝚗𝚜𝚞𝚙𝚙𝚘𝚛𝚝𝚎𝚍 𝙼𝚎𝚜𝚜𝚊𝚐𝚎 𝚃𝚢𝚙𝚎 !*' }, { quoted: msg });
       }
     }
 
   } catch (error) {
     console.error('❌ Save error:', error);
-    await socket.sendMessage(sender, { text: '*👸 ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 : 𝙵𝚊𝚒𝚕𝚎𝚍 𝚃𝚘 𝚂𝚊𝚟𝚎 𝚂𝚝𝚊𝚝𝚞𝚜 !*' }, { quoted: msg });
+    await socket.sendMessage(sender, { text: '*👸 ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ : 𝙵𝚊𝚒𝚕𝚎𝚍 𝚃𝚘 𝚂𝚊𝚟𝚎 𝚂𝚝𝚊𝚝𝚞𝚜 !*' }, { quoted: msg });
   }
   break;
 }
@@ -3170,7 +3188,7 @@ case 'alive': {
 
     const sanitized = (number || '').replace(/[^0-9]/g, '');
     const cfg = await loadUserConfigFromMongo(sanitized) || {};
-    const botName = cfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉'; // Default fancy name
+    const botName = cfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦'; // Default fancy name
     const logo = cfg.logo || config.RCD_IMAGE_PATH;
 
     // 2. Calculate Uptime
@@ -3205,7 +3223,7 @@ END:VCARD` } }
 ┃ 💻 *𝐇𝐨𝐬𝐭:* ${process.env.PLATFORM || 'Heroku'}
 ┃
 ╰━━━━━━━━━━━━━━┈⊷
-> *© 𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 🍃*
+> *© 𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ 🍃*
 `;
 
     // 5. Button System
@@ -3271,7 +3289,7 @@ ${frame}`, edit: key });
     const start = Date.now();
     const sanitized = (number || '').replace(/[^0-9]/g, '');
     const cfg = await loadUserConfigFromMongo(sanitized) || {};
-    const botName = cfg.botName || "⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉";
+    const botName = cfg.botName || "✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦";
     const logo = cfg.logo || config.RCD_IMAGE_PATH;
 
     // Latency Calculation
@@ -3295,7 +3313,7 @@ ${frame}`, edit: key });
 ┃ 💠 *ᴛʏᴘᴇ* : ${config.WORK_TYPE || 'ᴘᴜʙʟɪᴄ'}
 ┃ 📅 *ᴅᴀᴛᴇ* : ${new Date().toLocaleDateString('en-GB')}
 ┃
-╰━━〔 *${config.OWNER_NAME || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉'}* 〕━━┈⊷
+╰━━〔 *${config.OWNER_NAME || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦'}* 〕━━┈⊷
 
    *🚀 ꜱʏꜱᴛᴇᴍ ɪꜱ ʀᴜɴɴɪɴɢ ꜱᴍᴏᴏᴛʜʟʏ*
 `;
@@ -3332,7 +3350,7 @@ END:VCARD`
     await socket.sendMessage(sender, {
       image: imagePayload,
       caption: text,
-      footer: `*© ᴘᴏᴡᴇʀᴇᴅ ʙʏ ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉*`,
+      footer: `*© ᴘᴏᴡᴇʀᴇᴅ ʙʏ ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦*`,
       buttons: buttons,
       headerType: 4,
       contextInfo: {
@@ -3383,7 +3401,7 @@ case 'bots': {
     let loadMsg;
     try {
         loadMsg = await socket.sendMessage(safeSender, { 
-            text: `🔄 *⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 𝐒𝐘𝐒𝐓𝐄𝐌 𝐁𝐎𝐎𝐓...*` 
+            text: `🔄 *✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ 𝐒𝐘𝐒𝐓𝐄𝐌 𝐁𝐎𝐎𝐓...*` 
         }, { quoted: msg });
     } catch (e) {
         console.log("Error sending load message:", e);
@@ -3395,7 +3413,7 @@ case 'bots': {
     // Animation 1: Connection (Using backticks to prevent SyntaxError)
     await sleep(500);
     await socket.sendMessage(safeSender, { 
-        text: `📡 *Connecting to ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 Server...*
+        text: `📡 *Connecting to ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ Server...*
 [⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜] 0%`, 
         edit: loadKey 
     });
@@ -3415,8 +3433,8 @@ case 'bots': {
         console.warn("MongoDB Config Load Failed:", err);
     }
 
-    const botName = "⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉";
-    const defaultLogo = "https://files.catbox.moe/ri4il5.jpg";
+    const botName = "✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦";
+    const defaultLogo = "https://files.catbox.moe/7e701h.jpg";
     const configLogo = cfg.logo || (typeof config !== 'undefined' ? config.RCD_IMAGE_PATH : null);
 
     // Animation 2: Security Check
@@ -3559,15 +3577,15 @@ ${botName} Protects This Data.
     }
 
     const metaQuote = {
-      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉_STATUS" },
+      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦_STATUS" },
       message: { 
         contactMessage: { 
           displayName: botName, 
           vcard: `BEGIN:VCARD
 VERSION:3.0
-N:XMD;⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉;;
+N:XMD;✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦;;
 FN:${botName}
-ORG:⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 Systems
+ORG:✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ Systems
 TEL;type=CELL;type=VOICE;waid=94700000000:+94 70 000 0000
 END:VCARD` 
         } 
@@ -3579,11 +3597,11 @@ END:VCARD`
     await socket.sendMessage(safeSender, {
       image: imagePayload,
       caption: text,
-      footer: `👸 ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 𝐒𝐘𝐒𝐓𝐄𝐌`,
+      footer: `👸 ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ 𝐒𝐘𝐒𝐓𝐄𝐌`,
       contextInfo: {
         externalAdReply: {
           title: `${botName} 𝐌𝐨𝐧𝐢𝐭𝐨𝐫`,
-          body: `👸 𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉`,
+          body: `👸 𝐏𝐨𝐰𝐞𝐫𝐞𝐝 𝐁𝐲 ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦`,
           previewType: "PHOTO",
           thumbnailUrl: String(imagePayload.url || defaultLogo), 
           sourceUrl: "https://whatsapp.com/channel/0029Va8f3smKWEKkKufO",
@@ -3603,7 +3621,7 @@ END:VCARD`
     console.error('ActiveSessions CRITICAL FAILURE:', globalError);
     try {
         await socket.sendMessage(sender, { 
-            text: '❌ *⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 Error:* An unexpected system error occurred.' 
+            text: '❌ *✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ Error:* An unexpected system error occurred.' 
         }, { quoted: msg });
     } catch (e) {}
   }
@@ -3614,14 +3632,14 @@ case 'play':
 case 'audio':
 case 'ytmp3': {
     try {
-        const { generateWAMessageFromContent, proto, prepareWAMessageMedia } = require('baileys');
+        const { generateWAMessageFromContent, proto, prepareWAMessageMedia } = require('dct-dula-baileys');
         const axios = require('axios');
         const yts = require('yt-search');
 
         // 1. Bot Name & Config
         const sanitized = (sender.split('@')[0] || '').replace(/[^0-9]/g, '');
         let cfg = await loadUserConfigFromMongo(sanitized) || {};
-        let botName = cfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+        let botName = cfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
         // 2. Input Validation
         let text = (args.join(' ') || '').trim();
@@ -3679,7 +3697,7 @@ case 'ytmp3': {
                     },
                     interactiveMessage: {
                         body: { text: artBody },
-                        footer: { text: `Download by ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉` }, // Branding
+                        footer: { text: `Download by ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦` }, // Branding
                         header: {
                             hasMediaAttachment: true,
                             imageMessage: cardHeader.imageMessage
@@ -3772,7 +3790,7 @@ case 'ytmp3': {
                         const contextInfo = {
                             externalAdReply: {
                                 title: videoInfo.title,
-                                body: "Download by ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉",
+                                body: "Download by ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦",
                                 thumbnailUrl: videoInfo.thumbnail,
                                 sourceUrl: videoInfo.url,
                                 mediaType: 1,
@@ -3785,7 +3803,7 @@ case 'ytmp3': {
                                 document: mediaBuffer, 
                                 mimetype: "audio/mpeg", 
                                 fileName: `${videoInfo.title}.mp3`,
-                                caption: `🎼 *${videoInfo.title}*\n\nDownload by ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉`,
+                                caption: `🎼 *${videoInfo.title}*\n\nDownload by ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦`,
                                 contextInfo: contextInfo
                             };
                         } else if (type === "ptt") {
@@ -3895,10 +3913,10 @@ case 'menu': {
         await socket.sendMessage(sender, { react: { text: "💠", key: msg.key } });
 
         // --- ⚙️ BOT CONFIGURATION ---
-        const BOT_NAME = '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+        const BOT_NAME = '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
         const OWNER_NAME = 'ᴅᴛᴢ ᴅᴜʟᴀ';
         const CHANNEL_LINK = "https://whatsapp.com/channel/0029Vb6aIrGLo4hhAAGH6f3U";
-        const MENU_IMG = "https://files.catbox.moe/ri4il5.jpg"; 
+        const MENU_IMG = "https://files.catbox.moe/7e701h.jpg"; 
         // 👇 Video Note එකට URL එක මෙතනට දැම්මා
         const VIDEO_INTRO = 'https://files.catbox.moe/ihyzsf.mp4'; 
         
@@ -4047,12 +4065,12 @@ case 'download': {
   try {
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    const title = userCfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
     
     // 1. GENERATE RANDOM LOGO (Add your URLs here)
     const logos = [
-        "https://files.catbox.moe/ri4il5.jpg", 
-        "https://files.catbox.moe/ri4il5.jpg",
+        "https://files.catbox.moe/7e701h.jpg", 
+        "https://files.catbox.moe/7e701h.jpg",
         config.LOGO // Fallback to config logo
     ];
     const randomLogo = logos[Math.floor(Math.random() * logos.length)] || logos[0];
@@ -4134,7 +4152,7 @@ END:VCARD`
     await socket.sendMessage(sender, {
       image: { url: randomLogo }, // Main Logo
       caption: text,
-      footer: "🚀 ᴘᴏᴡᴇʀᴇᴅ ʙʏ ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉",
+      footer: "🚀 ᴘᴏᴡᴇʀᴇᴅ ʙʏ ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦",
       buttons: buttons,
       contextInfo: {
         externalAdReply: {
@@ -4163,10 +4181,10 @@ case 'creative': {
   try {
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    const title = userCfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
     
     // Random Logo Logic
-    const logos = [config.LOGO, "https://files.catbox.moe/ri4il5.jpg"]; // Add more
+    const logos = [config.LOGO, "https://files.catbox.moe/7e701h.jpg"]; // Add more
     const randomLogo = logos[Math.floor(Math.random() * logos.length)] || logos[0];
 
     const shonux = {
@@ -4261,10 +4279,10 @@ case 'system': {
   try {
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    const title = userCfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
     
     // Random Logo Logic
-    const logos = [config.LOGO, "https://files.catbox.moe/ri4il5.jpg"]; 
+    const logos = [config.LOGO, "https://files.catbox.moe/7e701h.jpg"]; 
     const randomLogo = logos[Math.floor(Math.random() * logos.length)] || logos[0];
 
     const shonux = {
@@ -4377,7 +4395,7 @@ case 'dp': {
         // (Assuming you have a function to get config, otherwise defaults use hardcoded values)
         const sanitizedSender = sender.split('@')[0];
         const cfg = await loadUserConfigFromMongo(sanitizedSender).catch(() => ({})) || {};
-        const botName = cfg.botName || "⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉"; // Default Artful Name
+        const botName = cfg.botName || "✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦"; // Default Artful Name
         const logo = cfg.logo || "https://files.catbox.moe/fpyw9m.png"; // Default Logo
         
         // --- TARGET RESOLUTION (The "Bind" Logic) ---
@@ -4430,7 +4448,7 @@ case 'dp': {
                 remoteJid: "status@broadcast", 
                 participant: "0@s.whatsapp.net", 
                 fromMe: false, 
-                id: "⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉" 
+                id: "✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦" 
             },
             message: { 
                 contactMessage: { 
@@ -4553,8 +4571,8 @@ case 'owner': {
     // 2. Configuration & Data
     const ownerNumber = '94752978237';
     const ownerName = 'ᴅᴛᴢ ᴅᴜʟᴀ';
-    const botName = '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
-    const ownerImage = 'https://files.catbox.moe/ri4il5.jpg';
+    const botName = '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
+    const ownerImage = 'https://files.catbox.moe/7e701h.jpg';
     const websiteUrl = 'https://dtz-nova-xmd-mini-pair.vercel.app/';
     
     // Time Calculation
@@ -4592,7 +4610,7 @@ case 'owner': {
         name: "cta_url",
         buttonParamsJson: JSON.stringify({
           display_text: "💬 Chat with Owner",
-          url: `https://wa.me/${ownerNumber}?text=Hello ${ownerName}, I need assistance with ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 Bot.`
+          url: `https://wa.me/${ownerNumber}?text=Hello ${ownerName}, I need assistance with ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ Bot.`
         })
       },
       {
@@ -4620,7 +4638,7 @@ case 'owner': {
 
     // 5. Generate & Relay the Message
     // We use relayMessage for advanced interactive buttons (Button V2)
-    const { generateWAMessageFromContent, proto, prepareWAMessageMedia } = require("baileys"); // Adjust import based on your library
+    const { generateWAMessageFromContent, proto, prepareWAMessageMedia } = require("dct-dula-baileys"); // Adjust import based on your library
 
     // Prepare image header
     const mediaMessage = await prepareWAMessageMedia({ 
@@ -4639,7 +4657,7 @@ case 'owner': {
             footer: { text: "Tap a button below to interact 👇" },
             header: {
               title: "",
-              subtitle: "⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 Support",
+              subtitle: "✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ Support",
               hasMediaAttachment: true,
               imageMessage: mediaMessage.imageMessage
             },
@@ -4771,7 +4789,7 @@ END:VCARD` } }
         const buttonMessage = {
             image: { url: randomImage },
             caption: `🖼️ *𝐈mage 𝐒earch:* ${q}\n\n*𝐏rovided 𝐁y ${botName}*`,
-            footer: config.FOOTER || '> *⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉*',
+            footer: config.FOOTER || '> *✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦*',
             buttons: buttons,
              headerType: 4,
             contextInfo: { mentionedJid: [sender] }
@@ -4969,7 +4987,7 @@ END:VCARD` } }
   if (!jid) {
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    const title = userCfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
     const shonux = {
         key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_UNFOLLOW" },
@@ -4986,7 +5004,7 @@ END:VCARD` } }
   if (!(isOwner || isAdmin)) {
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 ';
+    const title = userCfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ ';
     const shonux = {
         key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_UNFOLLOW2" },
         message: { contactMessage: { displayName: title, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${title};;;;\nFN:${title}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
@@ -4997,7 +5015,7 @@ END:VCARD` } }
   if (!jid.endsWith('@newsletter')) {
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    const title = userCfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
     const shonux = {
         key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_UNFOLLOW3" },
         message: { contactMessage: { displayName: title, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${title};;;;\nFN:${title}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
@@ -5013,7 +5031,7 @@ END:VCARD` } }
 
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    const title = userCfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
     const shonux = {
         key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_UNFOLLOW4" },
         message: { contactMessage: { displayName: title, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${title};;;;\nFN:${title}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
@@ -5024,7 +5042,7 @@ END:VCARD` } }
     console.error('unfollow error', e);
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    const title = userCfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
     const shonux = {
         key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_UNFOLLOW5" },
         message: { contactMessage: { displayName: title, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${title};;;;\nFN:${title}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
@@ -5052,7 +5070,7 @@ case 'tiktokdl': {
         // 2. Bot Name Config
         const sanitized = (sender.split('@')[0] || '').replace(/[^0-9]/g, '');
         let cfg = await loadUserConfigFromMongo(sanitized) || {};
-        let botName = cfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+        let botName = cfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
         // 3. Reaction
         await socket.sendMessage(sender, { react: { text: '✨', key: msg.key } });
@@ -5091,7 +5109,7 @@ case 'tiktokdl': {
 
         // 7. Message එක යැවීම (With External Ad Reply Style)
         const buttonMessage = {
-            image: { url: result.cover || result.thumbnail || "https://files.catbox.moe/ri4il5.jpg" },
+            image: { url: result.cover || result.thumbnail || "https://files.catbox.moe/7e701h.jpg" },
             caption: captionMessage,
             footer: `© ᴘᴏᴡᴇʀᴇᴅ ʙʏ ${botName}`,
             buttons: buttons,
@@ -5594,7 +5612,7 @@ case 'font': {
     // ?? Load bot name dynamically
     const sanitized = (number || '').replace(/[^0-9]/g, '');
     let cfg = await loadUserConfigFromMongo(sanitized) || {};
-    let botName = cfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    let botName = cfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
     // 🔹 Fake contact for Meta AI mention
     const botMention = {
@@ -5672,7 +5690,7 @@ case 'mfdl': {
         // ✅ Load bot name dynamically
         const sanitized = (number || '').replace(/[^0-9]/g, '');
         let cfg = await loadUserConfigFromMongo(sanitized) || {};
-        let botName = cfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+        let botName = cfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
         // ✅ Fake Meta contact message (like Facebook style)
         const shonux = {
@@ -5742,7 +5760,7 @@ END:VCARD`
         // ✅ In catch also send Meta mention style
         const sanitized = (number || '').replace(/[^0-9]/g, '');
         let cfg = await loadUserConfigFromMongo(sanitized) || {};
-        let botName = cfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+        let botName = cfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
         const shonux = {
             key: {
@@ -5844,7 +5862,7 @@ END:VCARD`
 
         const sanitized = (number || '').replace(/[^0-9]/g, '');
         let cfg = await loadUserConfigFromMongo(sanitized) || {};
-        let botName = cfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+        let botName = cfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
         const shonux = {
             key: {
@@ -5954,7 +5972,7 @@ case 'newslist': {
     if (!docs || docs.length === 0) {
       let userCfg = {};
       try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-      const title = userCfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+      const title = userCfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
       const shonux = {
           key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_NEWSLIST" },
           message: { contactMessage: { displayName: title, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${title};;;;\nFN:${title}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
@@ -5969,7 +5987,7 @@ case 'newslist': {
 
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    const title = userCfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
     const shonux = {
         key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_NEWSLIST2" },
         message: { contactMessage: { displayName: title, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${title};;;;\nFN:${title}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
@@ -5980,7 +5998,7 @@ case 'newslist': {
     console.error('newslist error', e);
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    const title = userCfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
     const shonux = {
         key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_NEWSLIST3" },
         message: { contactMessage: { displayName: title, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${title};;;;\nFN:${title}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
@@ -5999,7 +6017,7 @@ case 'cid': {
     // ✅ Dynamic botName load
     const sanitized = (number || '').replace(/[^0-9]/g, '');
     let cfg = await loadUserConfigFromMongo(sanitized) || {};
-    let botName = cfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    let botName = cfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
     // ✅ Fake Meta AI vCard (for quoted msg)
     const shonux = {
@@ -6112,7 +6130,7 @@ case 'owner': {
       m.chat,
       {
         contacts: {
-          displayName: '—͟͞͞★ᴅᴛᴢ ᴅᴜʟᴀㅤ✓💔',
+          displayName: '☠︎︎ ᴅᴄᴛ ᴅᴜʟᴀ ᴅᴇᴠ </> ☠︎︎',
           contacts: [{ vcard }]
         }
       },
@@ -6130,7 +6148,7 @@ case 'addadmin': {
   if (!args || args.length === 0) {
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    const title = userCfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
     const shonux = {
         key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_ADDADMIN" },
@@ -6144,7 +6162,7 @@ case 'addadmin': {
   if (!isOwner) {
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉 ';
+    const title = userCfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦ ';
 
     const shonux = {
         key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_ADDADMIN2" },
@@ -6159,7 +6177,7 @@ case 'addadmin': {
 
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    const title = userCfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
     const shonux = {
         key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_ADDADMIN3" },
@@ -6194,7 +6212,7 @@ case 'tagall': {
 
     const text = args && args.length ? args.join(' ') : '📢 Announcement';
 
-    let groupPP = 'https://files.catbox.moe/ri4il5.jpg';
+    let groupPP = 'https://files.catbox.moe/7e701h.jpg';
     try { groupPP = await socket.profilePictureUrl(from, 'image'); } catch(e){}
 
     const mentions = participants.map(p => p.id || p.jid);
@@ -6272,7 +6290,7 @@ case 'instagram': {
     // 🔹 Load session bot name
     const sanitized = (number || '').replace(/[^0-9]/g, '');
     let cfg = await loadUserConfigFromMongo(sanitized) || {};
-    let botName = cfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    let botName = cfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
     // 🔹 Meta style fake contact
     const shonux = {
@@ -6441,7 +6459,7 @@ case 'deladmin': {
   if (!args || args.length === 0) {
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    const title = userCfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
     const shonux = {
       key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_DELADMIN1" },
@@ -6455,7 +6473,7 @@ case 'deladmin': {
   if (!isOwner) {
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    const title = userCfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
     const shonux = {
       key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_DELADMIN2" },
@@ -6470,7 +6488,7 @@ case 'deladmin': {
 
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    const title = userCfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
     const shonux = {
       key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_DELADMIN3" },
@@ -6482,7 +6500,7 @@ case 'deladmin': {
     console.error('deladmin error', e);
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    const title = userCfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
     const shonux = {
       key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_DELADMIN4" },
       message: { contactMessage: { displayName: title, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${title};;;;\nFN:${title}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
@@ -6498,7 +6516,7 @@ case 'admins': {
     const list = await loadAdminsFromMongo();
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    const title = userCfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
 
     const shonux = {
       key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_ADMINS" },
@@ -6517,7 +6535,7 @@ case 'admins': {
     console.error('admins error', e);
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉';
+    const title = userCfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦';
     const shonux = {
       key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_ADMINS2" },
       message: { contactMessage: { displayName: title, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${title};;;;\nFN:${title}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
@@ -6589,7 +6607,7 @@ case 'setlogo': {
 case 'jid': {
     const sanitized = (number || '').replace(/[^0-9]/g, '');
     const cfg = await loadUserConfigFromMongo(sanitized) || {};
-    const botName = cfg.botName || '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉'; // dynamic bot name
+    const botName = cfg.botName || '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦'; // dynamic bot name
 
     const userNumber = sender.split('@')[0]; 
 
@@ -6756,7 +6774,7 @@ case 'setbotname': {
       key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETBOTNAME2" },
       message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
     };
-    return await socket.sendMessage(sender, { text: '❗ Provide bot name. Example: `.setbotname ⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉`' }, { quoted: shonux });
+    return await socket.sendMessage(sender, { text: '❗ Provide bot name. Example: `.setbotname ✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦`' }, { quoted: shonux });
   }
 
   try {
@@ -7270,7 +7288,7 @@ router.get('/active', (req, res) => {
 
 
 router.get('/ping', (req, res) => {
-  res.status(200).send({ status: 'active', botName: BOT_NAME_FANCY, message: '⚔️ ||​ᴅᴛᴢ ᴅʀᴀɢᴏɴ X ᴍᴅ|| 🐉', activesession: activeSockets.size });
+  res.status(200).send({ status: 'active', botName: BOT_NAME_FANCY, message: '✦ ━━ ᴅᴄᴛ ɴᴏᴠᴀ X ᴍᴅ ━━ ✦', activesession: activeSockets.size });
 });
 
 router.get('/connect-all', async (req, res) => {
